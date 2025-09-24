@@ -23,5 +23,6 @@ export {
     type MapEvents
 } from './mapService'
 export { LocationService, locationService, type LocationFormData, type LocationValidationResult } from './locationService'
+export { ExportService, exportService } from './exportService'
 
 export type { RouteCalculationResult } from './routeCalculator'

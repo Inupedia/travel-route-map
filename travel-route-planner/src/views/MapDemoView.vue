@@ -7,17 +7,9 @@
 
     <div class="demo-content">
       <!-- 地图容器 -->
-      <div class="map-section">
-        <MapContainer
-          height="600px"
-          width="100%"
-          :center="defaultCenter"
-          :zoom="12"
-          @map-ready="handleMapReady"
-          @location-click="handleLocationClick"
-          @location-add="handleLocationAdd"
-          @error="handleMapError"
-        />
+      <div class="map-section" ref="mapElementRef">
+        <MapContainer height="600px" width="100%" :center="defaultCenter" :zoom="12" @map-ready="handleMapReady"
+          @location-click="handleLocationClick" @location-add="handleLocationAdd" @error="handleMapError" />
       </div>
 
       <!-- 信息面板 -->
@@ -26,15 +18,10 @@
           <div v-if="locations.length === 0" class="empty-state">
             <el-empty description="暂无地点，点击地图添加地点" />
           </div>
-          
+
           <div v-else class="location-list">
-            <div
-              v-for="location in locations"
-              :key="location.id"
-              class="location-item"
-              :class="{ active: selectedLocationId === location.id }"
-              @click="selectLocation(location.id)"
-            >
+            <div v-for="location in locations" :key="location.id" class="location-item"
+              :class="{ active: selectedLocationId === location.id }" @click="selectLocation(location.id)">
               <div class="location-info">
                 <div class="location-header">
                   <span class="location-name">{{ location.name }}</span>
@@ -42,31 +29,19 @@
                     {{ getLocationTypeText(location.type) }}
                   </el-tag>
                 </div>
-                
+
                 <div class="location-coordinates">
                   {{ location.coordinates.lat.toFixed(6) }}, {{ location.coordinates.lng.toFixed(6) }}
                 </div>
-                
+
                 <div v-if="location.description" class="location-description">
                   {{ location.description }}
                 </div>
               </div>
-              
+
               <div class="location-actions">
-                <el-button
-                  type="primary"
-                  :icon="Edit"
-                  size="small"
-                  circle
-                  @click.stop="editLocation(location)"
-                />
-                <el-button
-                  type="danger"
-                  :icon="Delete"
-                  size="small"
-                  circle
-                  @click.stop="deleteLocation(location.id)"
-                />
+                <el-button type="primary" :icon="Edit" size="small" circle @click.stop="editLocation(location)" />
+                <el-button type="danger" :icon="Delete" size="small" circle @click.stop="deleteLocation(location.id)" />
               </div>
             </div>
           </div>
@@ -76,31 +51,31 @@
           <div v-if="routes.length === 0" class="empty-state">
             <p>添加多个地点后将自动生成路线</p>
           </div>
-          
+
           <div v-else class="route-list">
-            <div
-              v-for="route in routes"
-              :key="route.id"
-              class="route-item"
-            >
+            <div v-for="route in routes" :key="route.id" class="route-item">
               <div class="route-info">
                 <div class="route-header">
                   <span class="route-name">
                     {{ getLocationName(route.fromLocationId) }} → {{ getLocationName(route.toLocationId) }}
                   </span>
                 </div>
-                
+
                 <div class="route-details">
                   <span class="distance">
-                    <el-icon><Odometer /></el-icon>
+                    <el-icon>
+                      <Odometer />
+                    </el-icon>
                     {{ formatDistance(route.distance) }}
                   </span>
-                  
+
                   <span class="duration">
-                    <el-icon><Clock /></el-icon>
+                    <el-icon>
+                      <Clock />
+                    </el-icon>
                     {{ formatDuration(route.duration) }}
                   </span>
-                  
+
                   <span class="transport">
                     <el-icon>
                       <component :is="getTransportIcon(route.transportMode)" />
@@ -112,24 +87,21 @@
             </div>
           </div>
         </el-card>
+
+        <!-- 导出功能面板 -->
+        <el-card header="导出规划" style="margin-top: 16px;" v-if="locations.length > 0">
+          <ExportPanel :map-element="mapElementRef" />
+        </el-card>
       </div>
     </div>
 
     <!-- 编辑地点对话框 -->
-    <el-dialog
-      v-model="showEditDialog"
-      title="编辑地点"
-      width="500px"
-    >
-      <el-form
-        v-if="editingLocation"
-        :model="editingLocation"
-        label-width="80px"
-      >
+    <el-dialog v-model="showEditDialog" title="编辑地点" width="500px">
+      <el-form v-if="editingLocation" :model="editingLocation" label-width="80px">
         <el-form-item label="地点名称">
           <el-input v-model="editingLocation.name" />
         </el-form-item>
-        
+
         <el-form-item label="地点类型">
           <el-select v-model="editingLocation.type">
             <el-option label="出发点" :value="LocationTypeEnum.START" />
@@ -137,25 +109,17 @@
             <el-option label="终点" :value="LocationTypeEnum.END" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="描述">
-          <el-input
-            v-model="editingLocation.description"
-            type="textarea"
-            :rows="3"
-          />
+          <el-input v-model="editingLocation.description" type="textarea" :rows="3" />
         </el-form-item>
-        
+
         <el-form-item label="停留时间">
-          <el-input-number
-            v-model="editingLocation.visitDuration"
-            :min="0"
-            :step="15"
-          />
+          <el-input-number v-model="editingLocation.visitDuration" :min="0" :step="15" />
           <span style="margin-left: 8px;">分钟</span>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
         <el-button type="primary" @click="saveLocation">保存</el-button>
@@ -166,12 +130,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { 
-  ElCard, 
-  ElEmpty, 
-  ElTag, 
-  ElButton, 
-  ElIcon, 
+import {
+  ElCard,
+  ElEmpty,
+  ElTag,
+  ElButton,
+  ElIcon,
   ElDialog,
   ElForm,
   ElFormItem,
@@ -182,16 +146,17 @@ import {
   ElMessage,
   ElMessageBox
 } from 'element-plus'
-import { 
-  Edit, 
-  Delete, 
-  Odometer, 
+import {
+  Edit,
+  Delete,
+  Odometer,
   Clock,
   User,
   Position,
   Location
 } from '@element-plus/icons-vue'
 import { MapContainer } from '@/components/Map'
+import ExportPanel from '@/components/Panels/ExportPanel.vue'
 import { usePlanStore } from '@/stores/planStore'
 import { useMapStore } from '@/stores/mapStore'
 import type { Coordinates, LocationType, TransportMode } from '@/types'
@@ -205,6 +170,7 @@ const mapStore = useMapStore()
 // Refs
 const showEditDialog = ref(false)
 const editingLocation = ref<TravelLocation | null>(null)
+const mapElementRef = ref<HTMLElement>()
 
 // 默认地图中心（北京）
 const defaultCenter: Coordinates = { lat: 39.9042, lng: 116.4074 }
@@ -327,14 +293,14 @@ const formatDuration = (duration: number): string => {
   if (duration < 60) {
     return `${duration}分钟`
   }
-  
+
   const hours = Math.floor(duration / 60)
   const minutes = duration % 60
-  
+
   if (minutes === 0) {
     return `${hours}小时`
   }
-  
+
   return `${hours}小时${minutes}分钟`
 }
 </script>
@@ -484,7 +450,7 @@ const formatDuration = (duration: number): string => {
   .map-demo {
     .demo-content {
       grid-template-columns: 1fr;
-      
+
       .info-panel {
         order: -1;
       }

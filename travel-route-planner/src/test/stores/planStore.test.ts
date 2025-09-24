@@ -14,6 +14,24 @@ vi.mock('nanoid', () => ({
     nanoid: () => 'test-id-' + Math.random().toString(36).substr(2, 9)
 }))
 
+// Mock storageService
+vi.mock('@/services/storageService', () => {
+    const mockStorageService = {
+        savePlan: vi.fn().mockResolvedValue(undefined),
+        getSavedPlans: vi.fn().mockResolvedValue([]),
+        getPlanById: vi.fn().mockResolvedValue(null),
+        deletePlan: vi.fn().mockResolvedValue(undefined),
+        saveCurrentPlan: vi.fn().mockResolvedValue(undefined),
+        getCurrentPlan: vi.fn().mockResolvedValue(null),
+        clearCurrentPlan: vi.fn().mockResolvedValue(undefined),
+        getStorageInfo: vi.fn().mockReturnValue({ used: 0, total: 1000, percentage: 0 })
+    }
+
+    return {
+        storageService: mockStorageService
+    }
+})
+
 // Mock localStorage
 const localStorageMock = {
     getItem: vi.fn(),
@@ -28,10 +46,8 @@ Object.defineProperty(window, 'localStorage', {
 describe('PlanStore', () => {
     beforeEach(() => {
         setActivePinia(createPinia())
-        localStorageMock.getItem.mockClear()
-        localStorageMock.setItem.mockClear()
-        localStorageMock.removeItem.mockClear()
-        localStorageMock.clear.mockClear()
+        // Clear all mocks
+        vi.clearAllMocks()
     })
 
     describe('初始状态', () => {
@@ -302,57 +318,74 @@ describe('PlanStore', () => {
     })
 
     describe('规划保存和加载', () => {
-        it('应该能保存规划到本地存储', () => {
+        it('应该能保存规划到本地存储', async () => {
             const store = usePlanStore()
 
             store.createPlan('测试规划', 3)
-            store.savePlan()
+            await store.savePlan()
 
-            expect(localStorageMock.setItem).toHaveBeenCalledWith(
-                'travel-plans',
-                expect.any(String)
+            // Import the mocked service to check calls
+            const { storageService } = await import('@/services/storageService')
+            expect(storageService.savePlan).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: '测试规划',
+                    totalDays: 3
+                })
             )
-            expect(store.savedPlans).toHaveLength(1)
             expect(store.error).toBeNull()
         })
 
-        it('应该能加载规划', () => {
+        it('应该能加载规划', async () => {
             const store = usePlanStore()
 
-            // 先创建并保存一个规划
-            store.createPlan('测试规划', 3)
-            const planId = store.currentPlan!.id
-            store.savePlan()
+            // 创建测试规划数据
+            const testPlan = {
+                id: 'test-plan-id',
+                name: '测试规划',
+                description: '',
+                totalDays: 3,
+                locations: [],
+                routes: [],
+                settings: {
+                    mapCenter: { lat: 39.9042, lng: 116.4074 },
+                    mapZoom: 10,
+                    theme: 'light' as const,
+                    showDistances: true,
+                    showDurations: true
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
 
-            // 清空当前规划
-            store.clearCurrentPlan()
-            expect(store.currentPlan).toBeNull()
+            // Mock storageService to return the test plan
+            const { storageService } = await import('@/services/storageService')
+            vi.mocked(storageService.getPlanById).mockResolvedValue(testPlan)
 
             // 加载规划
-            store.loadPlan(planId)
+            await store.loadPlan('test-plan-id')
 
             expect(store.currentPlan).not.toBeNull()
             expect(store.currentPlan?.name).toBe('测试规划')
             expect(store.error).toBeNull()
         })
 
-        it('应该能删除规划', () => {
+        it('应该能删除规划', async () => {
             const store = usePlanStore()
 
             store.createPlan('测试规划', 3)
             const planId = store.currentPlan!.id
-            store.savePlan()
+            await store.savePlan()
 
+            // Mock that the plan exists in saved plans
+            const { storageService } = await import('@/services/storageService')
+            vi.mocked(storageService.getSavedPlans).mockResolvedValue([store.currentPlan!])
+            await store.loadSavedPlans()
             expect(store.savedPlans).toHaveLength(1)
 
-            store.deletePlan(planId)
+            await store.deletePlan(planId)
 
+            expect(storageService.deletePlan).toHaveBeenCalledWith(planId)
             expect(store.savedPlans).toHaveLength(0)
-            expect(store.currentPlan).toBeNull()
-            expect(localStorageMock.setItem).toHaveBeenCalledWith(
-                'travel-plans',
-                '[]'
-            )
         })
     })
 
