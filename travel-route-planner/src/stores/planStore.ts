@@ -8,6 +8,7 @@ import { defineStore } from 'pinia'
 import type { TravelPlan, Location, Route, LocationType, TransportMode } from '@/types'
 import { Theme } from '@/types'
 import { nanoid } from 'nanoid'
+import { storageService } from '@/services/storageService'
 
 export interface PlanState {
     currentPlan: TravelPlan | null
@@ -248,7 +249,7 @@ export const usePlanStore = defineStore('plan', () => {
         error.value = null
     }
 
-    const savePlan = () => {
+    const savePlan = async () => {
         if (!currentPlan.value) {
             error.value = '没有当前规划'
             return
@@ -257,19 +258,19 @@ export const usePlanStore = defineStore('plan', () => {
         isLoading.value = true
 
         try {
-            // 检查是否已存在
-            const existingIndex = savedPlans.value.findIndex(plan => plan.id === currentPlan.value!.id)
+            // 使用存储服务保存
+            await storageService.savePlan(currentPlan.value)
 
+            // 更新本地状态
+            const existingIndex = savedPlans.value.findIndex(plan => plan.id === currentPlan.value!.id)
             if (existingIndex >= 0) {
-                // 更新现有规划
                 savedPlans.value[existingIndex] = { ...currentPlan.value }
             } else {
-                // 添加新规划
                 savedPlans.value.push({ ...currentPlan.value })
             }
 
-            // 保存到本地存储
-            localStorage.setItem('travel-plans', JSON.stringify(savedPlans.value))
+            // 同时保存为当前规划
+            await storageService.saveCurrentPlan(currentPlan.value)
             error.value = null
         } catch (err) {
             error.value = '保存失败: ' + (err instanceof Error ? err.message : '未知错误')
@@ -278,17 +279,21 @@ export const usePlanStore = defineStore('plan', () => {
         }
     }
 
-    const loadPlan = (id: string) => {
+    const loadPlan = async (id: string) => {
         isLoading.value = true
 
         try {
-            const plan = savedPlans.value.find(p => p.id === id)
+            // 首先尝试从存储服务加载
+            const plan = await storageService.getPlanById(id)
             if (!plan) {
                 error.value = '规划不存在'
                 return
             }
 
             currentPlan.value = { ...plan }
+
+            // 保存为当前规划
+            await storageService.saveCurrentPlan(currentPlan.value)
             error.value = null
         } catch (err) {
             error.value = '加载失败: ' + (err instanceof Error ? err.message : '未知错误')
@@ -297,48 +302,49 @@ export const usePlanStore = defineStore('plan', () => {
         }
     }
 
-    const deletePlan = (id: string) => {
+    const deletePlan = async (id: string) => {
         try {
-            const planIndex = savedPlans.value.findIndex(plan => plan.id === id)
-            if (planIndex === -1) {
-                error.value = '规划不存在'
-                return
-            }
+            // 使用存储服务删除
+            await storageService.deletePlan(id)
 
-            savedPlans.value.splice(planIndex, 1)
+            // 更新本地状态
+            const planIndex = savedPlans.value.findIndex(plan => plan.id === id)
+            if (planIndex !== -1) {
+                savedPlans.value.splice(planIndex, 1)
+            }
 
             // 如果删除的是当前规划，清空当前规划
             if (currentPlan.value?.id === id) {
                 currentPlan.value = null
+                await storageService.saveCurrentPlan(null)
             }
 
-            // 更新本地存储
-            localStorage.setItem('travel-plans', JSON.stringify(savedPlans.value))
             error.value = null
         } catch (err) {
             error.value = '删除失败: ' + (err instanceof Error ? err.message : '未知错误')
         }
     }
 
-    const loadSavedPlans = () => {
+    const loadSavedPlans = async () => {
         try {
-            const stored = localStorage.getItem('travel-plans')
-            if (stored) {
-                const plans = JSON.parse(stored) as TravelPlan[]
-                savedPlans.value = plans.map(plan => ({
-                    ...plan,
-                    createdAt: new Date(plan.createdAt),
-                    updatedAt: new Date(plan.updatedAt),
-                    locations: plan.locations.map(loc => ({
-                        ...loc,
-                        createdAt: new Date(loc.createdAt),
-                        updatedAt: new Date(loc.updatedAt)
-                    }))
-                }))
-            }
+            // 使用存储服务加载
+            const plans = await storageService.getSavedPlans()
+            savedPlans.value = plans
             error.value = null
         } catch (err) {
             error.value = '加载已保存规划失败: ' + (err instanceof Error ? err.message : '未知错误')
+        }
+    }
+
+    const loadCurrentPlan = async () => {
+        try {
+            const plan = await storageService.getCurrentPlan()
+            if (plan) {
+                currentPlan.value = plan
+            }
+            error.value = null
+        } catch (err) {
+            error.value = '加载当前规划失败: ' + (err instanceof Error ? err.message : '未知错误')
         }
     }
 
@@ -351,8 +357,9 @@ export const usePlanStore = defineStore('plan', () => {
         error.value = null
     }
 
-    // 初始化时加载已保存的规划
+    // 初始化时加载已保存的规划和当前规划
     loadSavedPlans()
+    loadCurrentPlan()
 
     return {
         // State
@@ -381,6 +388,7 @@ export const usePlanStore = defineStore('plan', () => {
         loadPlan,
         deletePlan,
         loadSavedPlans,
+        loadCurrentPlan,
         clearError,
         clearCurrentPlan
     }

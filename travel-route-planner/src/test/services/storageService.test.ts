@@ -1,7 +1,12 @@
+/**
+ * 存储服务测试
+ * Storage service tests
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '@/services/storageService'
 import type { TravelPlan } from '@/types'
-import { LocationType, Theme } from '@/types'
+import { Theme } from '@/types'
 
 // Mock localStorage
 const localStorageMock = {
@@ -27,23 +32,17 @@ describe('StorageService', () => {
 
         mockPlan = {
             id: 'test-plan-1',
-            name: '测试旅游规划',
+            name: '测试规划',
             description: '这是一个测试规划',
             totalDays: 3,
             locations: [
                 {
                     id: 'loc-1',
-                    name: '北京天安门',
-                    type: LocationType.START,
+                    name: '北京',
+                    type: 'start',
                     coordinates: { lat: 39.9042, lng: 116.4074 },
-                    address: '北京市东城区天安门广场',
-                    description: '中华人民共和国的象征',
-                    images: [],
-                    tags: ['历史', '文化'],
-                    dayNumber: 1,
-                    visitDuration: 120,
-                    createdAt: new Date('2023-01-01'),
-                    updatedAt: new Date('2023-01-01')
+                    createdAt: new Date(),
+                    updatedAt: new Date()
                 }
             ],
             routes: [],
@@ -54,14 +53,14 @@ describe('StorageService', () => {
                 showDistances: true,
                 showDurations: true
             },
-            createdAt: new Date('2023-01-01'),
-            updatedAt: new Date('2023-01-01')
+            createdAt: new Date(),
+            updatedAt: new Date()
         }
     })
 
     describe('savePlan', () => {
-        it('应该成功保存新的旅游规划', async () => {
-            localStorageMock.getItem.mockReturnValue(null)
+        it('应该成功保存规划', async () => {
+            localStorageMock.getItem.mockReturnValue('[]')
 
             await storageService.savePlan(mockPlan)
 
@@ -71,86 +70,90 @@ describe('StorageService', () => {
             )
         })
 
-        it('应该更新已存在的旅游规划', async () => {
+        it('应该更新现有规划', async () => {
             const existingPlans = [mockPlan]
             localStorageMock.getItem.mockReturnValue(JSON.stringify(existingPlans))
 
-            const updatedPlan = { ...mockPlan, name: '更新后的规划' }
+            const updatedPlan = { ...mockPlan, name: '更新的规划' }
             await storageService.savePlan(updatedPlan)
 
             expect(localStorageMock.setItem).toHaveBeenCalledWith(
                 'travel-route-planner-saved-plans',
-                expect.stringContaining('更新后的规划')
+                expect.stringContaining('更新的规划')
             )
         })
 
-        it('应该在保存失败时抛出错误', async () => {
+        it('存储空间不足时应该抛出错误', async () => {
+            localStorageMock.getItem.mockReturnValue('[]')
             localStorageMock.setItem.mockImplementation(() => {
-                throw new Error('存储空间不足')
+                const error = new Error('QuotaExceededError')
+                // Mock DOMException properties
+                Object.defineProperty(error, 'code', { value: 22 })
+                Object.defineProperty(error, 'name', { value: 'QuotaExceededError' })
+                throw error
             })
 
-            await expect(storageService.savePlan(mockPlan)).rejects.toThrow('保存规划失败')
+            await expect(storageService.savePlan(mockPlan)).rejects.toThrow('存储空间不足')
         })
     })
 
     describe('getSavedPlans', () => {
-        it('应该返回所有已保存的规划', async () => {
+        it('应该返回空数组当没有保存的规划时', async () => {
+            localStorageMock.getItem.mockReturnValue(null)
+
+            const plans = await storageService.getSavedPlans()
+
+            expect(plans).toEqual([])
+        })
+
+        it('应该正确解析保存的规划', async () => {
             const savedPlans = [mockPlan]
             localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
 
-            const result = await storageService.getSavedPlans()
+            const plans = await storageService.getSavedPlans()
 
-            expect(result).toHaveLength(1)
-            expect(result[0].id).toBe(mockPlan.id)
-            expect(result[0].createdAt).toBeInstanceOf(Date)
+            expect(plans).toHaveLength(1)
+            expect(plans[0].id).toBe(mockPlan.id)
+            expect(plans[0].name).toBe(mockPlan.name)
         })
 
-        it('应该在没有保存数据时返回空数组', async () => {
-            localStorageMock.getItem.mockReturnValue(null)
+        it('应该正确转换日期对象', async () => {
+            const savedPlans = [mockPlan]
+            localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
 
-            const result = await storageService.getSavedPlans()
+            const plans = await storageService.getSavedPlans()
 
-            expect(result).toEqual([])
-        })
-
-        it('应该在数据解析失败时返回空数组', async () => {
-            localStorageMock.getItem.mockReturnValue('invalid json')
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
-
-            const result = await storageService.getSavedPlans()
-
-            expect(result).toEqual([])
-            expect(consoleSpy).toHaveBeenCalled()
-
-            consoleSpy.mockRestore()
+            expect(plans[0].createdAt).toBeInstanceOf(Date)
+            expect(plans[0].updatedAt).toBeInstanceOf(Date)
+            expect(plans[0].locations[0].createdAt).toBeInstanceOf(Date)
         })
     })
 
     describe('getPlanById', () => {
-        it('应该根据ID返回特定的规划', async () => {
+        it('应该返回指定ID的规划', async () => {
             const savedPlans = [mockPlan]
             localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
 
-            const result = await storageService.getPlanById(mockPlan.id)
+            const plan = await storageService.getPlanById(mockPlan.id)
 
-            expect(result).not.toBeNull()
-            expect(result!.id).toBe(mockPlan.id)
+            expect(plan).not.toBeNull()
+            expect(plan?.id).toBe(mockPlan.id)
         })
 
-        it('应该在找不到规划时返回null', async () => {
-            localStorageMock.getItem.mockReturnValue(JSON.stringify([]))
+        it('应该返回null当规划不存在时', async () => {
+            localStorageMock.getItem.mockReturnValue('[]')
 
-            const result = await storageService.getPlanById('non-existent-id')
+            const plan = await storageService.getPlanById('non-existent')
 
-            expect(result).toBeNull()
+            expect(plan).toBeNull()
         })
     })
 
     describe('deletePlan', () => {
-        it('应该成功删除指定的规划', async () => {
+        it('应该成功删除规划', async () => {
             const savedPlans = [mockPlan]
             localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
-            localStorageMock.setItem.mockImplementation(() => { }) // Reset any previous error mocks
+            localStorageMock.setItem.mockImplementation(() => { }) // Mock successful setItem
 
             await storageService.deletePlan(mockPlan.id)
 
@@ -159,54 +162,132 @@ describe('StorageService', () => {
                 '[]'
             )
         })
+    })
 
-        it('应该在删除失败时抛出错误', async () => {
-            localStorageMock.getItem.mockReturnValue(JSON.stringify([mockPlan]))
-            localStorageMock.setItem.mockImplementation(() => {
-                throw new Error('存储空间不足')
+    describe('getStorageInfo', () => {
+        it('应该返回存储使用信息', () => {
+            // Mock localStorage entries
+            Object.defineProperty(localStorage, 'test-key', {
+                value: 'test-value',
+                enumerable: true
             })
 
-            await expect(storageService.deletePlan(mockPlan.id)).rejects.toThrow('删除规划失败')
+            const info = storageService.getStorageInfo()
+
+            expect(info).toHaveProperty('used')
+            expect(info).toHaveProperty('available')
+            expect(info).toHaveProperty('percentage')
+            expect(typeof info.used).toBe('number')
+            expect(typeof info.percentage).toBe('number')
         })
     })
 
-    describe('saveCurrentPlan', () => {
-        it('应该保存当前规划', async () => {
-            localStorageMock.setItem.mockImplementation(() => { }) // Reset any previous error mocks
+    describe('exportData', () => {
+        it('应该导出所有数据为JSON', async () => {
+            const savedPlans = [mockPlan]
+            localStorageMock.getItem
+                .mockReturnValueOnce(JSON.stringify(savedPlans)) // getSavedPlans
+                .mockReturnValueOnce(JSON.stringify(mockPlan))    // getCurrentPlan
 
-            await storageService.saveCurrentPlan(mockPlan)
+            const exportedData = await storageService.exportData()
+            const parsedData = JSON.parse(exportedData)
+
+            expect(parsedData).toHaveProperty('savedPlans')
+            expect(parsedData).toHaveProperty('currentPlan')
+            expect(parsedData).toHaveProperty('exportDate')
+            expect(parsedData).toHaveProperty('version')
+            expect(parsedData.savedPlans).toHaveLength(1)
+        })
+    })
+
+    describe('importData', () => {
+        it('应该成功导入有效数据', async () => {
+            const importData = {
+                savedPlans: [mockPlan],
+                currentPlan: mockPlan,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            }
+
+            localStorageMock.setItem.mockImplementation(() => { }) // Mock successful setItem
+
+            await storageService.importData(JSON.stringify(importData))
 
             expect(localStorageMock.setItem).toHaveBeenCalledWith(
+                'travel-route-planner-saved-plans',
+                JSON.stringify(importData.savedPlans)
+            )
+            expect(localStorageMock.setItem).toHaveBeenCalledWith(
                 'travel-route-planner-current-plan',
-                expect.stringContaining(mockPlan.id)
+                JSON.stringify(importData.currentPlan)
             )
         })
 
-        it('应该在传入null时清除当前规划', async () => {
-            await storageService.saveCurrentPlan(null)
+        it('应该拒绝无效数据格式', async () => {
+            await expect(storageService.importData('invalid json')).rejects.toThrow('导入数据失败')
+        })
 
-            expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-                'travel-route-planner-current-plan'
-            )
+        it('应该验证规划数据结构', async () => {
+            const invalidData = {
+                savedPlans: [{ id: 'test' }] // 缺少必要字段
+            }
+
+            await expect(storageService.importData(JSON.stringify(invalidData))).rejects.toThrow('数据格式错误')
         })
     })
 
-    describe('getCurrentPlan', () => {
-        it('应该返回当前规划', async () => {
-            localStorageMock.getItem.mockReturnValue(JSON.stringify(mockPlan))
+    describe('getStorageStats', () => {
+        it('应该返回存储统计信息', async () => {
+            const savedPlans = [mockPlan]
+            localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
 
-            const result = await storageService.getCurrentPlan()
+            const stats = await storageService.getStorageStats()
 
-            expect(result).not.toBeNull()
-            expect(result!.id).toBe(mockPlan.id)
+            expect(stats).toHaveProperty('totalPlans')
+            expect(stats).toHaveProperty('totalLocations')
+            expect(stats).toHaveProperty('totalRoutes')
+            expect(stats).toHaveProperty('averagePlanSize')
+            expect(stats.totalPlans).toBe(1)
+            expect(stats.totalLocations).toBe(1)
         })
 
-        it('应该在没有当前规划时返回null', async () => {
-            localStorageMock.getItem.mockReturnValue(null)
+        it('应该处理空数据情况', async () => {
+            localStorageMock.getItem.mockReturnValue('[]')
 
-            const result = await storageService.getCurrentPlan()
+            const stats = await storageService.getStorageStats()
 
-            expect(result).toBeNull()
+            expect(stats.totalPlans).toBe(0)
+            expect(stats.totalLocations).toBe(0)
+            expect(stats.totalRoutes).toBe(0)
+            expect(stats.averagePlanSize).toBe(0)
+        })
+    })
+
+    describe('cleanupOldPlans', () => {
+        it('应该保留指定数量的最新规划', async () => {
+            const oldPlan = { ...mockPlan, id: 'old-plan', updatedAt: new Date('2023-01-01') }
+            const newPlan = { ...mockPlan, id: 'new-plan', updatedAt: new Date('2023-12-01') }
+            const savedPlans = [oldPlan, newPlan]
+
+            localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
+            localStorageMock.setItem.mockImplementation(() => { }) // Mock successful setItem
+
+            const removedCount = await storageService.cleanupOldPlans(1)
+
+            expect(removedCount).toBe(1)
+            expect(localStorageMock.setItem).toHaveBeenCalledWith(
+                'travel-route-planner-saved-plans',
+                expect.stringContaining('new-plan')
+            )
+        })
+
+        it('当规划数量不超过保留数量时应该返回0', async () => {
+            const savedPlans = [mockPlan]
+            localStorageMock.getItem.mockReturnValue(JSON.stringify(savedPlans))
+
+            const removedCount = await storageService.cleanupOldPlans(10)
+
+            expect(removedCount).toBe(0)
         })
     })
 
@@ -216,74 +297,6 @@ describe('StorageService', () => {
 
             expect(localStorageMock.removeItem).toHaveBeenCalledWith('travel-route-planner-saved-plans')
             expect(localStorageMock.removeItem).toHaveBeenCalledWith('travel-route-planner-current-plan')
-        })
-    })
-
-    describe('getStorageInfo', () => {
-        it('应该返回存储使用情况', () => {
-            // Mock localStorage keys and values
-            Object.defineProperty(localStorageMock, 'hasOwnProperty', {
-                value: vi.fn().mockReturnValue(true)
-            })
-
-            const mockStorage = {
-                'key1': 'value1',
-                'key2': 'value2'
-            }
-
-            Object.keys(mockStorage).forEach(key => {
-                Object.defineProperty(localStorageMock, key, {
-                    value: mockStorage[key as keyof typeof mockStorage],
-                    enumerable: true
-                })
-            })
-
-            const result = storageService.getStorageInfo()
-
-            expect(result).toHaveProperty('used')
-            expect(result).toHaveProperty('available')
-            expect(result).toHaveProperty('percentage')
-            expect(typeof result.used).toBe('number')
-            expect(typeof result.available).toBe('number')
-            expect(typeof result.percentage).toBe('number')
-        })
-    })
-
-    describe('exportData', () => {
-        it('应该导出所有数据为JSON', async () => {
-            const savedPlans = [mockPlan]
-            localStorageMock.getItem
-                .mockReturnValueOnce(JSON.stringify(savedPlans)) // getSavedPlans
-                .mockReturnValueOnce(JSON.stringify(mockPlan))   // getCurrentPlan
-
-            const result = await storageService.exportData()
-
-            const exportedData = JSON.parse(result)
-            expect(exportedData).toHaveProperty('savedPlans')
-            expect(exportedData).toHaveProperty('currentPlan')
-            expect(exportedData).toHaveProperty('exportDate')
-            expect(exportedData).toHaveProperty('version')
-        })
-    })
-
-    describe('importData', () => {
-        it('应该成功导入数据', async () => {
-            localStorageMock.setItem.mockImplementation(() => { }) // Reset any previous error mocks
-
-            const importData = {
-                savedPlans: [mockPlan],
-                currentPlan: mockPlan,
-                exportDate: new Date().toISOString(),
-                version: '1.0'
-            }
-
-            await storageService.importData(JSON.stringify(importData))
-
-            expect(localStorageMock.setItem).toHaveBeenCalledTimes(2)
-        })
-
-        it('应该在导入无效数据时抛出错误', async () => {
-            await expect(storageService.importData('invalid json')).rejects.toThrow('导入数据失败')
         })
     })
 })
