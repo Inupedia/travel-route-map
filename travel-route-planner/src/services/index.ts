@@ -6,6 +6,13 @@
 export { StorageService, storageService } from './storageService'
 export { RouteCalculator, routeCalculator } from './routeCalculator'
 export {
+    RouteService,
+    routeService,
+    type RouteConnectionOptions,
+    type RouteOrderAdjustment,
+    type RouteServiceResult
+} from './routeService'
+export {
     MapService,
     AMapService,
     MapServiceFactory,

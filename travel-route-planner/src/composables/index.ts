@@ -4,3 +4,4 @@
  */
 
 export { useLocationManagement } from './useLocationManagement'
+export { useRouteManagement, type RouteManagementOptions } from './useRouteManagement'
