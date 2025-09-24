@@ -1,0 +1,100 @@
+@use './styles/variables.scss' as *;
+@import './base.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family:
+    'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
+    Arial, sans-serif;
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  color: $text-color-primary;
+  background-color: $bg-color-page;
+}
+
+// Global utility classes
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Responsive utilities
+.hidden-xs {
+  @media (max-width: $sm - 1px) {
+    display: none !important;
+  }
+}
+
+.hidden-sm {
+  @media (min-width: $sm) and (max-width: $md - 1px) {
+    display: none !important;
+  }
+}
+
+.hidden-md {
+  @media (min-width: $md) and (max-width: $lg - 1px) {
+    display: none !important;
+  }
+}
+
+.hidden-lg {
+  @media (min-width: $lg) {
+    display: none !important;
+  }
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-color;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: $border-radius-base;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: $text-color-placeholder;
+}
