@@ -5,3 +5,4 @@
 
 export { useLocationManagement } from './useLocationManagement'
 export { useRouteManagement, type RouteManagementOptions } from './useRouteManagement'
+export { useDayPlanManagement } from './useDayPlanManagement'
