@@ -1,11 +1,24 @@
 @use './styles/variables.scss' as *;
 @import './base.css';
 
+// 全局重置
 * {
   box-sizing: border-box;
 }
 
-html,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -13,6 +26,12 @@ body {
   font-family:
     'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
     Arial, sans-serif;
+  font-weight: 400;
+  color: $text-color-primary;
+  background-color: $bg-color-page;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 #app {
@@ -23,9 +42,11 @@ body {
   font-weight: normal;
   color: $text-color-primary;
   background-color: $bg-color-page;
+  overflow: hidden;
+  position: relative;
 }
 
-// Global utility classes
+// 全局工具类
 .flex {
   display: flex;
 }
@@ -47,6 +68,20 @@ body {
   justify-content: space-between;
 }
 
+.flex-around {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
 .full-height {
   height: 100%;
 }
@@ -55,7 +90,280 @@ body {
   width: 100%;
 }
 
-// Responsive utilities
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.position-absolute {
+  position: absolute;
+}
+
+.position-fixed {
+  position: fixed;
+}
+
+// 间距工具类
+.m-0 {
+  margin: 0;
+}
+
+.m-1 {
+  margin: $spacing-xs;
+}
+
+.m-2 {
+  margin: $spacing-sm;
+}
+
+.m-3 {
+  margin: $spacing-md;
+}
+
+.m-4 {
+  margin: $spacing-lg;
+}
+
+.m-5 {
+  margin: $spacing-xl;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.mt-1 {
+  margin-top: $spacing-xs;
+}
+
+.mt-2 {
+  margin-top: $spacing-sm;
+}
+
+.mt-3 {
+  margin-top: $spacing-md;
+}
+
+.mt-4 {
+  margin-top: $spacing-lg;
+}
+
+.mt-5 {
+  margin-top: $spacing-xl;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mb-1 {
+  margin-bottom: $spacing-xs;
+}
+
+.mb-2 {
+  margin-bottom: $spacing-sm;
+}
+
+.mb-3 {
+  margin-bottom: $spacing-md;
+}
+
+.mb-4 {
+  margin-bottom: $spacing-lg;
+}
+
+.mb-5 {
+  margin-bottom: $spacing-xl;
+}
+
+.ml-0 {
+  margin-left: 0;
+}
+
+.ml-1 {
+  margin-left: $spacing-xs;
+}
+
+.ml-2 {
+  margin-left: $spacing-sm;
+}
+
+.ml-3 {
+  margin-left: $spacing-md;
+}
+
+.ml-4 {
+  margin-left: $spacing-lg;
+}
+
+.ml-5 {
+  margin-left: $spacing-xl;
+}
+
+.mr-0 {
+  margin-right: 0;
+}
+
+.mr-1 {
+  margin-right: $spacing-xs;
+}
+
+.mr-2 {
+  margin-right: $spacing-sm;
+}
+
+.mr-3 {
+  margin-right: $spacing-md;
+}
+
+.mr-4 {
+  margin-right: $spacing-lg;
+}
+
+.mr-5 {
+  margin-right: $spacing-xl;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.p-1 {
+  padding: $spacing-xs;
+}
+
+.p-2 {
+  padding: $spacing-sm;
+}
+
+.p-3 {
+  padding: $spacing-md;
+}
+
+.p-4 {
+  padding: $spacing-lg;
+}
+
+.p-5 {
+  padding: $spacing-xl;
+}
+
+.pt-0 {
+  padding-top: 0;
+}
+
+.pt-1 {
+  padding-top: $spacing-xs;
+}
+
+.pt-2 {
+  padding-top: $spacing-sm;
+}
+
+.pt-3 {
+  padding-top: $spacing-md;
+}
+
+.pt-4 {
+  padding-top: $spacing-lg;
+}
+
+.pt-5 {
+  padding-top: $spacing-xl;
+}
+
+.pb-0 {
+  padding-bottom: 0;
+}
+
+.pb-1 {
+  padding-bottom: $spacing-xs;
+}
+
+.pb-2 {
+  padding-bottom: $spacing-sm;
+}
+
+.pb-3 {
+  padding-bottom: $spacing-md;
+}
+
+.pb-4 {
+  padding-bottom: $spacing-lg;
+}
+
+.pb-5 {
+  padding-bottom: $spacing-xl;
+}
+
+.pl-0 {
+  padding-left: 0;
+}
+
+.pl-1 {
+  padding-left: $spacing-xs;
+}
+
+.pl-2 {
+  padding-left: $spacing-sm;
+}
+
+.pl-3 {
+  padding-left: $spacing-md;
+}
+
+.pl-4 {
+  padding-left: $spacing-lg;
+}
+
+.pl-5 {
+  padding-left: $spacing-xl;
+}
+
+.pr-0 {
+  padding-right: 0;
+}
+
+.pr-1 {
+  padding-right: $spacing-xs;
+}
+
+.pr-2 {
+  padding-right: $spacing-sm;
+}
+
+.pr-3 {
+  padding-right: $spacing-md;
+}
+
+.pr-4 {
+  padding-right: $spacing-lg;
+}
+
+.pr-5 {
+  padding-right: $spacing-xl;
+}
+
+// 响应式工具类
 .hidden-xs {
   @media (max-width: $sm - 1px) {
     display: none !important;
@@ -80,7 +388,54 @@ body {
   }
 }
 
-// Custom scrollbar
+.visible-xs {
+  @media (min-width: $sm) {
+    display: none !important;
+  }
+}
+
+.visible-sm {
+
+  @media (max-width: $sm - 1px),
+  (min-width: $md) {
+    display: none !important;
+  }
+}
+
+.visible-md {
+
+  @media (max-width: $md - 1px),
+  (min-width: $lg) {
+    display: none !important;
+  }
+}
+
+.visible-lg {
+  @media (max-width: $lg - 1px) {
+    display: none !important;
+  }
+}
+
+// 移动端优化
+@media (max-width: $sm - 1px) {
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  .mobile-text-center {
+    text-align: center !important;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-flex-column {
+    flex-direction: column !important;
+  }
+}
+
+// 自定义滚动条
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -88,13 +443,200 @@ body {
 
 ::-webkit-scrollbar-track {
   background: $bg-color;
+  border-radius: $border-radius-base;
 }
 
 ::-webkit-scrollbar-thumb {
   background: $border-color;
   border-radius: $border-radius-base;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: $text-color-placeholder;
+}
+
+::-webkit-scrollbar-corner {
+  background: $bg-color;
+}
+
+// Firefox 滚动条样式
+* {
+  scrollbar-width: thin;
+  scrollbar-color: $border-color $bg-color;
+}
+
+// 选择文本样式
+::selection {
+  background: rgba($primary-color, 0.2);
+  color: $text-color-primary;
+}
+
+::-moz-selection {
+  background: rgba($primary-color, 0.2);
+  color: $text-color-primary;
+}
+
+// 焦点样式
+:focus-visible {
+  outline: 2px solid $primary-color;
+  outline-offset: 2px;
+}
+
+// 按钮和交互元素的触摸优化
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// 图片优化
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+// 表格响应式
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: $sm - 1px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+// 深色主题支持
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  :focus-visible {
+    outline-width: 3px;
+  }
+
+  button,
+  .el-button {
+    border-width: 2px;
+  }
+}
+
+// 减少动画模式支持
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// 打印样式
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+// Element Plus 组件样式覆盖
+.el-message {
+  z-index: 10000;
+}
+
+.el-notification {
+  z-index: 9999;
+}
+
+.el-loading-mask {
+  z-index: 9998;
+}
+
+// 移动端 Element Plus 优化
+@media (max-width: $sm - 1px) {
+  .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
+  .el-drawer {
+    width: 100% !important;
+  }
+
+  .el-message-box {
+    width: 90% !important;
+  }
+}
+
+// 无障碍优化
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// 加载状态
+.loading-skeleton {
+  background: linear-gradient(90deg,
+      rgba(190, 190, 190, 0.2) 25%,
+      rgba(129, 129, 129, 0.24) 37%,
+      rgba(190, 190, 190, 0.2) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+// 错误状态
+.error-state {
+  color: $danger-color;
+  border-color: $danger-color;
+}
+
+.success-state {
+  color: $success-color;
+  border-color: $success-color;
+}
+
+.warning-state {
+  color: $warning-color;
+  border-color: $warning-color;
 }
