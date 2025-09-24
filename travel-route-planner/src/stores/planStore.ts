@@ -6,6 +6,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { TravelPlan, Location, Route, LocationType, TransportMode } from '@/types'
+import { Theme } from '@/types'
 import { nanoid } from 'nanoid'
 
 export interface PlanState {
@@ -49,7 +50,7 @@ export const usePlanStore = defineStore('plan', () => {
             settings: {
                 mapCenter: { lat: 39.9042, lng: 116.4074 }, // 默认北京
                 mapZoom: 10,
-                theme: 'light',
+                theme: Theme.LIGHT,
                 showDistances: true,
                 showDurations: true
             },
@@ -67,6 +68,21 @@ export const usePlanStore = defineStore('plan', () => {
             return
         }
 
+        // 验证必要字段
+        if (!locationData.name || !locationData.coordinates) {
+            error.value = '地点名称和坐标不能为空'
+            return
+        }
+
+        // 验证坐标格式
+        if (typeof locationData.coordinates.lat !== 'number' ||
+            typeof locationData.coordinates.lng !== 'number' ||
+            isNaN(locationData.coordinates.lat) ||
+            isNaN(locationData.coordinates.lng)) {
+            error.value = '坐标格式错误'
+            return
+        }
+
         // 验证地点类型限制
         if (locationData.type === 'start' && startLocation.value) {
             error.value = '只能有一个出发点'
@@ -78,17 +94,25 @@ export const usePlanStore = defineStore('plan', () => {
             return
         }
 
-        const now = new Date()
-        const newLocation: Location = {
-            ...locationData,
-            id: nanoid(),
-            createdAt: now,
-            updatedAt: now
-        }
+        try {
+            const now = new Date()
+            const newLocation: Location = {
+                ...locationData,
+                id: nanoid(),
+                coordinates: {
+                    lat: Number(locationData.coordinates.lat),
+                    lng: Number(locationData.coordinates.lng)
+                },
+                createdAt: now,
+                updatedAt: now
+            }
 
-        currentPlan.value.locations.push(newLocation)
-        currentPlan.value.updatedAt = now
-        error.value = null
+            currentPlan.value.locations.push(newLocation)
+            currentPlan.value.updatedAt = now
+            error.value = null
+        } catch (err) {
+            error.value = '添加地点失败: ' + (err instanceof Error ? err.message : '未知错误')
+        }
     }
 
     const updateLocation = (id: string, updates: Partial<Location>) => {

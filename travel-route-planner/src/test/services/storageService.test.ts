@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '@/services/storageService'
 import type { TravelPlan } from '@/types'
+import { LocationType, Theme } from '@/types'
 
 // Mock localStorage
 const localStorageMock = {
@@ -33,7 +34,7 @@ describe('StorageService', () => {
                 {
                     id: 'loc-1',
                     name: '北京天安门',
-                    type: 'start',
+                    type: LocationType.START,
                     coordinates: { lat: 39.9042, lng: 116.4074 },
                     address: '北京市东城区天安门广场',
                     description: '中华人民共和国的象征',
@@ -49,7 +50,7 @@ describe('StorageService', () => {
             settings: {
                 mapCenter: { lat: 39.9042, lng: 116.4074 },
                 mapZoom: 10,
-                theme: 'light',
+                theme: Theme.LIGHT,
                 showDistances: true,
                 showDurations: true
             },

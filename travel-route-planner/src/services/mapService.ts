@@ -208,9 +208,23 @@ export class AMapService extends MapService {
 
     private async loadAMapScript(): Promise<void> {
         return new Promise((resolve, reject) => {
+            // 检查是否已经加载过
+            if (window.AMap) {
+                resolve()
+                return
+            }
+
             const script = document.createElement('script')
-            script.src = `https://webapi.amap.com/maps?v=2.0&key=${import.meta.env.VITE_AMAP_KEY || 'your-amap-key'}`
-            script.onload = () => resolve()
+            const apiKey = import.meta.env.VITE_AMAP_KEY || 'your-amap-key'
+            script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar,AMap.Scale,AMap.Driving,AMap.Walking,AMap.Transfer`
+            script.onload = () => {
+                // 等待AMap完全加载
+                if (window.AMap) {
+                    resolve()
+                } else {
+                    reject(new Error('高德地图API加载失败'))
+                }
+            }
             script.onerror = () => reject(new Error('高德地图API加载失败'))
             document.head.appendChild(script)
         })

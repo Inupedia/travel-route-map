@@ -6,6 +6,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Coordinates, MapMode } from '@/types'
+import { MapMode as MapModeEnum } from '@/types'
 
 export interface MapState {
     mapInstance: any | null
@@ -23,12 +24,12 @@ export const useMapStore = defineStore('map', () => {
     const zoom = ref(10)
     const selectedLocationId = ref<string | null>(null)
     const isAddingLocation = ref(false)
-    const mapMode = ref<MapMode>('view')
+    const mapMode = ref<MapMode>(MapModeEnum.VIEW)
 
     // Getters
     const isMapReady = computed(() => mapInstance.value !== null)
-    const isEditMode = computed(() => mapMode.value === 'edit')
-    const isViewMode = computed(() => mapMode.value === 'view')
+    const isEditMode = computed(() => mapMode.value === MapModeEnum.EDIT)
+    const isViewMode = computed(() => mapMode.value === MapModeEnum.VIEW)
     const hasSelectedLocation = computed(() => selectedLocationId.value !== null)
 
     // Actions
@@ -84,7 +85,7 @@ export const useMapStore = defineStore('map', () => {
 
         // 如果开启添加模式，切换到编辑模式
         if (isAddingLocation.value) {
-            mapMode.value = 'edit'
+            mapMode.value = MapModeEnum.EDIT
         }
     }
 
@@ -93,7 +94,7 @@ export const useMapStore = defineStore('map', () => {
 
         // 如果开启添加模式，切换到编辑模式
         if (adding) {
-            mapMode.value = 'edit'
+            mapMode.value = MapModeEnum.EDIT
         }
     }
 
@@ -101,7 +102,7 @@ export const useMapStore = defineStore('map', () => {
         mapMode.value = mode
 
         // 如果切换到查看模式，关闭添加地点模式
-        if (mode === 'view') {
+        if (mode === MapModeEnum.VIEW) {
             isAddingLocation.value = false
         }
     }
@@ -136,7 +137,7 @@ export const useMapStore = defineStore('map', () => {
         setZoom(10)
         selectLocation(null)
         setAddingLocation(false)
-        setMapMode('view')
+        setMapMode(MapModeEnum.VIEW)
     }
 
     const destroyMap = () => {

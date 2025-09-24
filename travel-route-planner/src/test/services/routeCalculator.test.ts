@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { RouteCalculator } from '@/services/routeCalculator'
 import type { Location, Route } from '@/types'
+import { LocationType, TransportMode } from '@/types'
 
 describe('RouteCalculator', () => {
     let routeCalculator: RouteCalculator
@@ -13,7 +14,7 @@ describe('RouteCalculator', () => {
             {
                 id: 'loc-1',
                 name: '北京天安门',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 },
                 address: '北京市东城区天安门广场',
                 dayNumber: 1,
@@ -23,7 +24,7 @@ describe('RouteCalculator', () => {
             {
                 id: 'loc-2',
                 name: '故宫博物院',
-                type: 'waypoint',
+                type: LocationType.WAYPOINT,
                 coordinates: { lat: 39.9163, lng: 116.3972 },
                 address: '北京市东城区景山前街4号',
                 dayNumber: 1,
@@ -33,7 +34,7 @@ describe('RouteCalculator', () => {
             {
                 id: 'loc-3',
                 name: '颐和园',
-                type: 'end',
+                type: LocationType.END,
                 coordinates: { lat: 39.9999, lng: 116.2755 },
                 address: '北京市海淀区新建宫门路19号',
                 dayNumber: 2,
@@ -48,7 +49,7 @@ describe('RouteCalculator', () => {
             const result = await routeCalculator.calculateRoute(
                 mockLocations[0],
                 mockLocations[1],
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(result).toHaveProperty('distance')
@@ -58,7 +59,7 @@ describe('RouteCalculator', () => {
 
             expect(result.distance).toBeGreaterThan(0)
             expect(result.duration).toBeGreaterThan(0)
-            expect(result.transportMode).toBe('driving')
+            expect(result.transportMode).toBe(TransportMode.DRIVING)
             expect(Array.isArray(result.path)).toBe(true)
             expect(result.path!.length).toBeGreaterThan(0)
         })
@@ -67,10 +68,10 @@ describe('RouteCalculator', () => {
             const result = await routeCalculator.calculateRoute(
                 mockLocations[0],
                 mockLocations[1],
-                'walking'
+                TransportMode.WALKING
             )
 
-            expect(result.transportMode).toBe('walking')
+            expect(result.transportMode).toBe(TransportMode.WALKING)
             expect(result.duration).toBeGreaterThan(0)
         })
 
@@ -78,10 +79,10 @@ describe('RouteCalculator', () => {
             const result = await routeCalculator.calculateRoute(
                 mockLocations[0],
                 mockLocations[1],
-                'transit'
+                TransportMode.TRANSIT
             )
 
-            expect(result.transportMode).toBe('transit')
+            expect(result.transportMode).toBe(TransportMode.TRANSIT)
             expect(result.duration).toBeGreaterThan(0)
         })
 
@@ -89,7 +90,7 @@ describe('RouteCalculator', () => {
             const result = await routeCalculator.calculateRoute(
                 mockLocations[0],
                 mockLocations[1],
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(result.distance).toBeGreaterThan(0)
@@ -102,7 +103,7 @@ describe('RouteCalculator', () => {
             const result = await routeCalculator.calculateRoute(
                 mockLocations[0],
                 mockLocations[1],
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(result.path).toBeDefined()
@@ -122,7 +123,7 @@ describe('RouteCalculator', () => {
         it('应该计算多个地点间的连续路线', async () => {
             const routes = await routeCalculator.calculateMultipleRoutes(
                 mockLocations,
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(routes).toHaveLength(2) // 3个地点应该产生2条路线
@@ -134,7 +135,7 @@ describe('RouteCalculator', () => {
                 expect(route).toHaveProperty('distance')
                 expect(route).toHaveProperty('duration')
                 expect(route).toHaveProperty('transportMode')
-                expect(route.transportMode).toBe('driving')
+                expect(route.transportMode).toBe(TransportMode.DRIVING)
             })
 
             // 检查路线连接的正确性
@@ -147,7 +148,7 @@ describe('RouteCalculator', () => {
         it('应该在地点少于2个时返回空数组', async () => {
             const routes = await routeCalculator.calculateMultipleRoutes(
                 [mockLocations[0]],
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(routes).toEqual([])
@@ -156,7 +157,7 @@ describe('RouteCalculator', () => {
         it('应该在空数组时返回空数组', async () => {
             const routes = await routeCalculator.calculateMultipleRoutes(
                 [],
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(routes).toEqual([])
@@ -172,7 +173,7 @@ describe('RouteCalculator', () => {
                 startLocation,
                 waypoints,
                 undefined,
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(optimizedOrder).toHaveLength(3)
@@ -189,7 +190,7 @@ describe('RouteCalculator', () => {
                 startLocation,
                 waypoints,
                 endLocation,
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(optimizedOrder).toHaveLength(3)
@@ -205,7 +206,7 @@ describe('RouteCalculator', () => {
                 startLocation,
                 [],
                 endLocation,
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(optimizedOrder).toHaveLength(2)
@@ -220,7 +221,7 @@ describe('RouteCalculator', () => {
                 startLocation,
                 [],
                 undefined,
-                'driving'
+                TransportMode.DRIVING
             )
 
             expect(optimizedOrder).toHaveLength(1)
@@ -237,7 +238,7 @@ describe('RouteCalculator', () => {
                     toLocationId: 'loc-2',
                     distance: 10.5,
                     duration: 30,
-                    transportMode: 'driving',
+                    transportMode: TransportMode.DRIVING,
                     dayNumber: 1
                 },
                 {
@@ -246,7 +247,7 @@ describe('RouteCalculator', () => {
                     toLocationId: 'loc-3',
                     distance: 15.3,
                     duration: 45,
-                    transportMode: 'driving',
+                    transportMode: TransportMode.DRIVING,
                     dayNumber: 1
                 }
             ]
@@ -278,7 +279,7 @@ describe('RouteCalculator', () => {
                 toLocationId: 'loc-2',
                 distance: 10.5,
                 duration: 30,
-                transportMode: 'driving'
+                transportMode: TransportMode.DRIVING
             }
 
             const result = routeCalculator.validateRoute(validRoute)
@@ -292,7 +293,7 @@ describe('RouteCalculator', () => {
                 toLocationId: 'loc-2',
                 distance: 10.5,
                 duration: 30,
-                transportMode: 'driving'
+                transportMode: TransportMode.DRIVING
             }
 
             const result = routeCalculator.validateRoute(invalidRoute)
@@ -306,7 +307,7 @@ describe('RouteCalculator', () => {
                 fromLocationId: 'loc-1',
                 distance: 10.5,
                 duration: 30,
-                transportMode: 'driving'
+                transportMode: TransportMode.DRIVING
             }
 
             const result = routeCalculator.validateRoute(invalidRoute)
@@ -321,7 +322,7 @@ describe('RouteCalculator', () => {
                 toLocationId: 'loc-2',
                 distance: -5,
                 duration: 30,
-                transportMode: 'driving'
+                transportMode: TransportMode.DRIVING
             }
 
             const result = routeCalculator.validateRoute(invalidRoute)
@@ -336,7 +337,7 @@ describe('RouteCalculator', () => {
                 toLocationId: 'loc-2',
                 distance: 10.5,
                 duration: -10,
-                transportMode: 'driving'
+                transportMode: TransportMode.DRIVING
             }
 
             const result = routeCalculator.validateRoute(invalidRoute)

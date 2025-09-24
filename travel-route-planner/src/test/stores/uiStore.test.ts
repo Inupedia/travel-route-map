@@ -3,9 +3,10 @@
  * UIStore unit tests
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useUIStore } from '@/stores/uiStore'
+import { ActivePanel, Theme } from '@/types'
 
 // Mock localStorage
 const localStorageMock = {
@@ -46,7 +47,7 @@ describe('UIStore', () => {
             expect(store.showLocationForm).toBe(false)
             expect(store.showRouteForm).toBe(false)
             expect(store.selectedDay).toBe(1)
-            expect(store.theme).toBe('light')
+            expect(store.theme).toBe(Theme.LIGHT)
             expect(store.isMobile).toBe(false)
             expect(store.isLoading).toBe(false)
             expect(store.notifications).toEqual([])
@@ -67,9 +68,9 @@ describe('UIStore', () => {
         it('应该能设置活动面板', () => {
             const store = useUIStore()
 
-            store.setActivePanel('location')
+            store.setActivePanel(ActivePanel.LOCATION)
 
-            expect(store.activePanel).toBe('location')
+            expect(store.activePanel).toBe(ActivePanel.LOCATION)
             expect(store.hasActivePanel).toBe(true)
             expect(store.isLocationPanelActive).toBe(true)
         })
@@ -78,24 +79,24 @@ describe('UIStore', () => {
             const store = useUIStore()
 
             // 打开面板
-            store.togglePanel('location')
-            expect(store.activePanel).toBe('location')
+            store.togglePanel(ActivePanel.LOCATION)
+            expect(store.activePanel).toBe(ActivePanel.LOCATION)
 
             // 关闭面板
-            store.togglePanel('location')
+            store.togglePanel(ActivePanel.LOCATION)
             expect(store.activePanel).toBeNull()
 
             // 切换到不同面板
-            store.setActivePanel('route')
-            store.togglePanel('location')
-            expect(store.activePanel).toBe('location')
+            store.setActivePanel(ActivePanel.ROUTE)
+            store.togglePanel(ActivePanel.LOCATION)
+            expect(store.activePanel).toBe(ActivePanel.LOCATION)
         })
 
         it('应该能关闭面板', () => {
             const store = useUIStore()
 
-            store.setActivePanel('location')
-            expect(store.activePanel).toBe('location')
+            store.setActivePanel(ActivePanel.LOCATION)
+            expect(store.activePanel).toBe(ActivePanel.LOCATION)
 
             store.closePanel()
             expect(store.activePanel).toBeNull()
@@ -104,15 +105,15 @@ describe('UIStore', () => {
         it('应该正确识别不同面板状态', () => {
             const store = useUIStore()
 
-            store.setActivePanel('route')
+            store.setActivePanel(ActivePanel.ROUTE)
             expect(store.isRoutePanelActive).toBe(true)
             expect(store.isLocationPanelActive).toBe(false)
 
-            store.setActivePanel('day-plan')
+            store.setActivePanel(ActivePanel.DAY_PLAN)
             expect(store.isDayPlanPanelActive).toBe(true)
             expect(store.isRoutePanelActive).toBe(false)
 
-            store.setActivePanel('export')
+            store.setActivePanel(ActivePanel.EXPORT)
             expect(store.isExportPanelActive).toBe(true)
             expect(store.isDayPlanPanelActive).toBe(false)
         })
@@ -201,32 +202,32 @@ describe('UIStore', () => {
         it('应该能设置主题', () => {
             const store = useUIStore()
 
-            store.setTheme('dark')
+            store.setTheme(Theme.DARK)
 
-            expect(store.theme).toBe('dark')
+            expect(store.theme).toBe(Theme.DARK)
             expect(store.isDarkTheme).toBe(true)
             expect(store.isLightTheme).toBe(false)
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('travel-planner-theme', 'dark')
+            expect(localStorageMock.setItem).toHaveBeenCalledWith('travel-planner-theme', Theme.DARK)
         })
 
         it('应该能切换主题', () => {
             const store = useUIStore()
 
-            expect(store.theme).toBe('light')
+            expect(store.theme).toBe(Theme.LIGHT)
 
             store.toggleTheme()
-            expect(store.theme).toBe('dark')
+            expect(store.theme).toBe(Theme.DARK)
 
             store.toggleTheme()
-            expect(store.theme).toBe('light')
+            expect(store.theme).toBe(Theme.LIGHT)
         })
 
         it('应该从本地存储加载主题', () => {
-            localStorageMock.getItem.mockReturnValue('dark')
+            localStorageMock.getItem.mockReturnValue(Theme.DARK)
 
             const store = useUIStore()
 
-            expect(store.theme).toBe('dark')
+            expect(store.theme).toBe(Theme.DARK)
         })
     })
 
@@ -359,7 +360,7 @@ describe('UIStore', () => {
             const store = useUIStore()
 
             // 修改一些状态
-            store.setActivePanel('location')
+            store.setActivePanel(ActivePanel.LOCATION)
             store.showLocationFormDialog()
             store.showRouteFormDialog()
             store.setSelectedDay(5)

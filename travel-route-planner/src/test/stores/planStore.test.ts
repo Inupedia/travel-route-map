@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePlanStore } from '@/stores/planStore'
 import type { Location, Route } from '@/types'
+import { LocationType, TransportMode } from '@/types'
 
 // Mock nanoid
 vi.mock('nanoid', () => ({
@@ -72,7 +73,7 @@ describe('PlanStore', () => {
 
             const locationData = {
                 name: '北京',
-                type: 'start' as const,
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 },
                 address: '北京市',
                 dayNumber: 1
@@ -82,7 +83,7 @@ describe('PlanStore', () => {
 
             expect(store.currentLocations).toHaveLength(1)
             expect(store.currentLocations[0].name).toBe('北京')
-            expect(store.currentLocations[0].type).toBe('start')
+            expect(store.currentLocations[0].type).toBe(LocationType.START)
             expect(store.startLocation).not.toBeUndefined()
             expect(store.error).toBeNull()
         })
@@ -93,14 +94,14 @@ describe('PlanStore', () => {
             // 添加第一个出发点
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
             // 尝试添加第二个出发点
             store.addLocation({
                 name: '上海',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 31.2304, lng: 121.4737 }
             })
 
@@ -114,14 +115,14 @@ describe('PlanStore', () => {
             // 添加第一个终点
             store.addLocation({
                 name: '北京',
-                type: 'end',
+                type: LocationType.END,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
             // 尝试添加第二个终点
             store.addLocation({
                 name: '上海',
-                type: 'end',
+                type: LocationType.END,
                 coordinates: { lat: 31.2304, lng: 121.4737 }
             })
 
@@ -134,7 +135,7 @@ describe('PlanStore', () => {
 
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
@@ -155,7 +156,7 @@ describe('PlanStore', () => {
 
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
@@ -172,19 +173,19 @@ describe('PlanStore', () => {
 
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
             store.addLocation({
                 name: '上海',
-                type: 'waypoint',
+                type: LocationType.WAYPOINT,
                 coordinates: { lat: 31.2304, lng: 121.4737 }
             })
 
             store.addLocation({
                 name: '广州',
-                type: 'end',
+                type: LocationType.END,
                 coordinates: { lat: 23.1291, lng: 113.2644 }
             })
 
@@ -203,13 +204,13 @@ describe('PlanStore', () => {
             // 添加两个地点用于测试路线
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
             store.addLocation({
                 name: '上海',
-                type: 'end',
+                type: LocationType.END,
                 coordinates: { lat: 31.2304, lng: 121.4737 }
             })
         })
@@ -223,7 +224,7 @@ describe('PlanStore', () => {
                 toLocationId: locations[1].id,
                 distance: 1200,
                 duration: 720,
-                transportMode: 'driving',
+                transportMode: TransportMode.DRIVING,
                 dayNumber: 1
             })
 
@@ -242,7 +243,7 @@ describe('PlanStore', () => {
                 toLocationId: locations[1].id,
                 distance: 1200,
                 duration: 720,
-                transportMode: 'driving' as const,
+                transportMode: TransportMode.DRIVING,
                 dayNumber: 1
             }
 
@@ -262,7 +263,7 @@ describe('PlanStore', () => {
                 toLocationId: locations[1].id,
                 distance: 1200,
                 duration: 720,
-                transportMode: 'driving',
+                transportMode: TransportMode.DRIVING,
                 dayNumber: 1
             })
 
@@ -270,11 +271,11 @@ describe('PlanStore', () => {
 
             store.updateRoute(routeId, {
                 distance: 1300,
-                transportMode: 'transit'
+                transportMode: TransportMode.TRANSIT
             })
 
             expect(store.currentRoutes[0].distance).toBe(1300)
-            expect(store.currentRoutes[0].transportMode).toBe('transit')
+            expect(store.currentRoutes[0].transportMode).toBe(TransportMode.TRANSIT)
             expect(store.error).toBeNull()
         })
 
@@ -287,7 +288,7 @@ describe('PlanStore', () => {
                 toLocationId: locations[1].id,
                 distance: 1200,
                 duration: 720,
-                transportMode: 'driving',
+                transportMode: TransportMode.DRIVING,
                 dayNumber: 1
             })
 
@@ -361,7 +362,7 @@ describe('PlanStore', () => {
 
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 
@@ -373,7 +374,7 @@ describe('PlanStore', () => {
 
             store.addLocation({
                 name: '北京',
-                type: 'start',
+                type: LocationType.START,
                 coordinates: { lat: 39.9042, lng: 116.4074 }
             })
 

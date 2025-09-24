@@ -6,6 +6,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { ActivePanel, Theme } from '@/types'
+import { Theme as ThemeEnum } from '@/types'
 
 export interface UIState {
     activePanel: ActivePanel | null
@@ -22,7 +23,7 @@ export const useUIStore = defineStore('ui', () => {
     const showLocationForm = ref(false)
     const showRouteForm = ref(false)
     const selectedDay = ref(1)
-    const theme = ref<Theme>('light')
+    const theme = ref<Theme>(ThemeEnum.LIGHT)
     const isMobile = ref(false)
 
     // 其他UI状态
@@ -117,7 +118,7 @@ export const useUIStore = defineStore('ui', () => {
     }
 
     const toggleTheme = () => {
-        const newTheme = theme.value === 'light' ? 'dark' : 'light'
+        const newTheme = theme.value === ThemeEnum.LIGHT ? ThemeEnum.DARK : ThemeEnum.LIGHT
         setTheme(newTheme)
     }
 

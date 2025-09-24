@@ -1,9 +1,6 @@
 import type { Location, Route } from '@/types'
 
-/**
- * 交通方式枚举
- */
-export type TransportMode = 'walking' | 'driving' | 'transit'
+import { TransportMode } from '@/types'
 
 /**
  * 路线计算结果
@@ -55,9 +52,9 @@ export class RouteCalculator {
      */
     private estimateActualDistance(straightDistance: number, mode: TransportMode): number {
         const factors = {
-            walking: 1.3,   // 步行路径通常比直线距离长30%
-            driving: 1.4,   // 驾车路径通常比直线距离长40%
-            transit: 1.5    // 公共交通路径通常比直线距离长50%
+            [TransportMode.WALKING]: 1.3,   // 步行路径通常比直线距离长30%
+            [TransportMode.DRIVING]: 1.4,   // 驾车路径通常比直线距离长40%
+            [TransportMode.TRANSIT]: 1.5    // 公共交通路径通常比直线距离长50%
         }
 
         return straightDistance * factors[mode]
@@ -68,9 +65,9 @@ export class RouteCalculator {
      */
     private estimateDuration(distance: number, mode: TransportMode): number {
         const speeds = {
-            walking: 5,    // 步行速度 5km/h
-            driving: 40,   // 市内驾车平均速度 40km/h
-            transit: 25    // 公共交通平均速度 25km/h
+            [TransportMode.WALKING]: 5,    // 步行速度 5km/h
+            [TransportMode.DRIVING]: 40,   // 市内驾车平均速度 40km/h
+            [TransportMode.TRANSIT]: 25    // 公共交通平均速度 25km/h
         }
 
         const baseTime = (distance / speeds[mode]) * 60 // 转换为分钟
@@ -120,7 +117,7 @@ export class RouteCalculator {
     async calculateRoute(
         from: Location,
         to: Location,
-        transportMode: TransportMode = 'driving'
+        transportMode: TransportMode = TransportMode.DRIVING
     ): Promise<RouteCalculationResult> {
         try {
             // 计算直线距离
@@ -161,7 +158,7 @@ export class RouteCalculator {
      */
     async calculateMultipleRoutes(
         locations: Location[],
-        transportMode: TransportMode = 'driving'
+        transportMode: TransportMode = TransportMode.DRIVING
     ): Promise<Route[]> {
         if (locations.length < 2) {
             return []
@@ -203,7 +200,7 @@ export class RouteCalculator {
         startLocation: Location,
         waypoints: Location[],
         endLocation?: Location,
-        transportMode: TransportMode = 'driving'
+        transportMode: TransportMode = TransportMode.DRIVING
     ): Promise<Location[]> {
         if (waypoints.length === 0) {
             return endLocation ? [startLocation, endLocation] : [startLocation]
@@ -302,7 +299,7 @@ export class RouteCalculator {
             errors.push('耗时必须是非负数')
         }
 
-        if (route.transportMode && !['walking', 'driving', 'transit'].includes(route.transportMode)) {
+        if (route.transportMode && !Object.values(TransportMode).includes(route.transportMode)) {
             errors.push('无效的交通方式')
         }
 

@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useMapStore } from '@/stores/mapStore'
+import { MapMode } from '@/types'
 
 describe('MapStore', () => {
     beforeEach(() => {
@@ -174,9 +175,9 @@ describe('MapStore', () => {
         it('应该能设置地图模式', () => {
             const store = useMapStore()
 
-            store.setMapMode('edit')
+            store.setMapMode(MapMode.EDIT)
 
-            expect(store.mapMode).toBe('edit')
+            expect(store.mapMode).toBe(MapMode.EDIT)
             expect(store.isEditMode).toBe(true)
             expect(store.isViewMode).toBe(false)
         })
@@ -187,9 +188,9 @@ describe('MapStore', () => {
             store.setAddingLocation(true)
             expect(store.isAddingLocation).toBe(true)
 
-            store.setMapMode('view')
+            store.setMapMode(MapMode.VIEW)
 
-            expect(store.mapMode).toBe('view')
+            expect(store.mapMode).toBe(MapMode.VIEW)
             expect(store.isAddingLocation).toBe(false)
         })
     })
@@ -203,7 +204,7 @@ describe('MapStore', () => {
             store.setZoom(15)
             store.selectLocation('location-1')
             store.setAddingLocation(true)
-            store.setMapMode('edit')
+            store.setMapMode(MapMode.EDIT)
 
             // 重置
             store.resetView()

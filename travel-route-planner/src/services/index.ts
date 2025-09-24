@@ -16,4 +16,4 @@ export {
     type MapEvents
 } from './mapService'
 
-export type { TransportMode, RouteCalculationResult } from './routeCalculator'
+export type { RouteCalculationResult } from './routeCalculator'

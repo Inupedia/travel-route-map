@@ -478,7 +478,7 @@ describe('MapService', () => {
 
                     // 模拟地图点击事件
                     const mapInstance = mapService.getMapInstance()
-                    const clickCallback = mapInstance.on.mock.calls.find(call => call[0] === 'click')[1]
+                    const clickCallback = mapInstance.on.mock.calls.find((call: any) => call[0] === 'click')[1]
                     clickCallback({ lnglat: { lat: 39.9042, lng: 116.4074 } })
 
                     expect(clickHandler).toHaveBeenCalledWith({ lat: 39.9042, lng: 116.4074 })
@@ -494,7 +494,7 @@ describe('MapService', () => {
 
                     // 模拟地图点击事件
                     const mapInstance = mapService.getMapInstance()
-                    const clickCallback = mapInstance.on.mock.calls.find(call => call[0] === 'click')[1]
+                    const clickCallback = mapInstance.on.mock.calls.find((call: any) => call[0] === 'click')[1]
                     clickCallback({ lnglat: { lat: 39.9042, lng: 116.4074 } })
 
                     expect(clickHandler).not.toHaveBeenCalled()
