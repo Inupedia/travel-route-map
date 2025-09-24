@@ -29,6 +29,23 @@
         <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入地点描述（可选）" />
       </el-form-item>
 
+      <el-form-item label="地点图片" prop="images">
+        <div class="image-upload-section">
+          <el-upload v-model:file-list="imageFileList" :action="uploadAction" :before-upload="beforeImageUpload"
+            :on-success="handleImageUploadSuccess" :on-error="handleImageUploadError" :on-remove="handleImageRemove"
+            :on-preview="handleImagePreview" list-type="picture-card" :limit="6" accept="image/*" :auto-upload="false"
+            :disabled="isSubmitting">
+            <el-icon class="upload-icon">
+              <Plus />
+            </el-icon>
+            <div class="upload-text">上传图片</div>
+          </el-upload>
+          <div class="upload-tips">
+            <p>支持 JPG、PNG、GIF 格式，单张图片不超过 5MB，最多上传 6 张</p>
+          </div>
+        </div>
+      </el-form-item>
+
       <el-form-item label="标签" prop="tags">
         <el-tag v-for="tag in formData.tags" :key="tag" closable @close="removeTag(tag)"
           style="margin-right: 8px; margin-bottom: 8px">
@@ -71,7 +88,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules, UploadFile, UploadFiles, UploadProps } from 'element-plus'
 import { usePlanStore } from '@/stores/planStore'
 import type { Location, LocationType } from '@/types'
 
@@ -107,6 +125,10 @@ const isDeleting = ref(false)
 const inputVisible = ref(false)
 const inputValue = ref('')
 
+// Image upload state
+const imageFileList = ref<UploadFile[]>([])
+const uploadAction = ref('#') // We'll handle upload manually
+
 // Form data
 const formData = ref({
   name: '',
@@ -117,6 +139,7 @@ const formData = ref({
   },
   address: '',
   description: '',
+  images: [] as string[],
   tags: [] as string[],
   dayNumber: undefined as number | undefined,
   visitDuration: undefined as number | undefined
@@ -197,10 +220,12 @@ const resetForm = () => {
     },
     address: '',
     description: '',
+    images: [],
     tags: [],
     dayNumber: undefined,
     visitDuration: undefined
   }
+  imageFileList.value = []
   formRef.value?.clearValidate()
 }
 
@@ -216,10 +241,19 @@ watch(() => props.location, (newLocation) => {
       },
       address: newLocation.address || '',
       description: newLocation.description || '',
+      images: [...(newLocation.images || [])],
       tags: [...(newLocation.tags || [])],
       dayNumber: newLocation.dayNumber,
       visitDuration: newLocation.visitDuration
     }
+
+    // Update image file list for display
+    imageFileList.value = (newLocation.images || []).map((url, index) => ({
+      name: `image-${index}`,
+      url: url,
+      uid: Date.now() + index,
+      status: 'success'
+    }))
   } else {
     resetForm()
   }
@@ -242,6 +276,7 @@ const handleSubmit = async () => {
       },
       address: formData.value.address?.trim() || undefined,
       description: formData.value.description?.trim() || undefined,
+      images: formData.value.images.length > 0 ? formData.value.images : undefined,
       tags: formData.value.tags.length > 0 ? formData.value.tags.filter(tag => tag.trim().length > 0).map(tag => tag.trim()) : undefined,
       dayNumber: formData.value.dayNumber,
       visitDuration: formData.value.visitDuration
@@ -314,6 +349,51 @@ const handleInputConfirm = () => {
   inputValue.value = ''
 }
 
+// Image upload methods
+const beforeImageUpload = (file: File) => {
+  const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'].includes(file.type)
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isValidType) {
+    ElMessage.error('只能上传 JPG、PNG、GIF 格式的图片!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB!')
+    return false
+  }
+
+  // Convert file to base64 for local storage
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const base64 = e.target?.result as string
+    formData.value.images.push(base64)
+  }
+  reader.readAsDataURL(file)
+
+  return false // Prevent auto upload
+}
+
+const handleImageUploadSuccess = (response: any, file: UploadFile, fileList: UploadFiles) => {
+  // This won't be called since we prevent auto upload
+}
+
+const handleImageUploadError = (error: any, file: UploadFile, fileList: UploadFiles) => {
+  ElMessage.error('图片上传失败')
+}
+
+const handleImageRemove = (file: UploadFile, fileList: UploadFiles) => {
+  // Find and remove the corresponding image from formData
+  const index = imageFileList.value.findIndex(item => item.uid === file.uid)
+  if (index > -1) {
+    formData.value.images.splice(index, 1)
+  }
+}
+
+const handleImagePreview = (file: UploadFile) => {
+  // Element Plus will handle preview automatically
+}
+
 // Expose methods for parent component
 defineExpose({
   resetForm,
@@ -338,6 +418,44 @@ defineExpose({
   .el-tag {
     margin-right: 8px;
     margin-bottom: 8px;
+  }
+
+  .image-upload-section {
+    width: 100%;
+
+    :deep(.el-upload--picture-card) {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+    }
+
+    :deep(.el-upload-list--picture-card .el-upload-list__item) {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+    }
+
+    .upload-icon {
+      font-size: 24px;
+      color: var(--el-text-color-secondary);
+      margin-bottom: 4px;
+    }
+
+    .upload-text {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+
+    .upload-tips {
+      margin-top: 8px;
+
+      p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+        line-height: 1.4;
+      }
+    }
   }
 }
 </style>

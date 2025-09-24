@@ -2,13 +2,10 @@
   <div class="location-panel">
     <div class="panel-header">
       <h3>地点管理</h3>
-      <el-button
-        type="primary"
-        size="small"
-        @click="openAddLocationForm"
-        :disabled="!hasCurrentPlan"
-      >
-        <el-icon><Plus /></el-icon>
+      <el-button type="primary" size="small" @click="openAddLocationForm" :disabled="!hasCurrentPlan">
+        <el-icon>
+          <Plus />
+        </el-icon>
         添加地点
       </el-button>
     </div>
@@ -52,25 +49,16 @@
       <div class="location-filters">
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-input
-              v-model="searchQuery"
-              placeholder="搜索地点名称"
-              clearable
-              size="small"
-            >
+            <el-input v-model="searchQuery" placeholder="搜索地点名称" clearable size="small">
               <template #prefix>
-                <el-icon><Search /></el-icon>
+                <el-icon>
+                  <Search />
+                </el-icon>
               </template>
             </el-input>
           </el-col>
           <el-col :span="12">
-            <el-select
-              v-model="filterType"
-              placeholder="筛选类型"
-              clearable
-              size="small"
-              style="width: 100%"
-            >
+            <el-select v-model="filterType" placeholder="筛选类型" clearable size="small" style="width: 100%">
               <el-option label="全部" value="" />
               <el-option label="出发点" value="start" />
               <el-option label="途经点" value="waypoint" />
@@ -86,62 +74,55 @@
           <el-empty description="暂无地点" />
         </div>
 
-        <div
-          v-for="location in filteredLocations"
-          :key="location.id"
-          class="location-item"
-          :class="{ 'selected': selectedLocation?.id === location.id }"
-          @click="selectLocation(location)"
-        >
+        <div v-for="location in filteredLocations" :key="location.id" class="location-item"
+          :class="{ 'selected': selectedLocation?.id === location.id }" @click="showLocationDetailsDialog(location)">
           <div class="location-header">
             <div class="location-title">
-              <el-tag
-                :type="getLocationTypeTagType(location.type)"
-                size="small"
-                class="location-type-tag"
-              >
+              <el-tag :type="getLocationTypeTagType(location.type)" size="small" class="location-type-tag">
                 {{ getLocationTypeLabel(location.type) }}
               </el-tag>
               <span class="location-name">{{ location.name }}</span>
             </div>
             <div class="location-actions">
-              <el-button
-                type="primary"
-                size="small"
-                text
-                @click.stop="editLocation(location)"
-              >
-                <el-icon><Edit /></el-icon>
+              <el-button type="primary" size="small" text @click.stop="editLocation(location)">
+                <el-icon>
+                  <Edit />
+                </el-icon>
               </el-button>
-              <el-button
-                type="danger"
-                size="small"
-                text
-                @click.stop="confirmDeleteLocation(location)"
-              >
-                <el-icon><Delete /></el-icon>
+              <el-button type="danger" size="small" text @click.stop="confirmDeleteLocation(location)">
+                <el-icon>
+                  <Delete />
+                </el-icon>
               </el-button>
             </div>
           </div>
 
           <div class="location-details">
             <div class="location-coordinates">
-              <el-icon><Location /></el-icon>
+              <el-icon>
+                <Location />
+              </el-icon>
               {{ formatCoordinates(location.coordinates) }}
             </div>
-            
+
             <div v-if="location.address" class="location-address">
-              <el-icon><MapLocation /></el-icon>
+              <el-icon>
+                <MapLocation />
+              </el-icon>
               {{ location.address }}
             </div>
 
             <div v-if="location.dayNumber" class="location-day">
-              <el-icon><Calendar /></el-icon>
+              <el-icon>
+                <Calendar />
+              </el-icon>
               第{{ location.dayNumber }}天
             </div>
 
             <div v-if="location.visitDuration" class="location-duration">
-              <el-icon><Clock /></el-icon>
+              <el-icon>
+                <Clock />
+              </el-icon>
               {{ location.visitDuration }}分钟
             </div>
           </div>
@@ -151,32 +132,59 @@
           </div>
 
           <div v-if="location.tags && location.tags.length > 0" class="location-tags">
-            <el-tag
-              v-for="tag in location.tags"
-              :key="tag"
-              size="small"
-              class="location-tag"
-            >
+            <el-tag v-for="tag in location.tags" :key="tag" size="small" class="location-tag">
               {{ tag }}
             </el-tag>
+          </div>
+
+          <!-- 地点图片预览 -->
+          <div v-if="location.images && location.images.length > 0" class="location-images">
+            <div class="images-preview">
+              <div v-for="(image, index) in location.images.slice(0, 3)" :key="index" class="image-item"
+                @click="previewImage(location.images, index)">
+                <el-image :src="image" :alt="`${location.name} 图片 ${index + 1}`" fit="cover"
+                  :preview-src-list="location.images" :initial-index="index" lazy>
+                  <template #error>
+                    <div class="image-error">
+                      <el-icon>
+                        <Picture />
+                      </el-icon>
+                      <span>加载失败</span>
+                    </div>
+                  </template>
+                </el-image>
+              </div>
+              <div v-if="location.images.length > 3" class="more-images" @click="previewImage(location.images, 3)">
+                <span>+{{ location.images.length - 3 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 默认占位图 -->
+          <div v-else class="location-placeholder">
+            <div class="placeholder-image" @click="editLocation(location)">
+              <el-icon>
+                <Picture />
+              </el-icon>
+              <span>点击添加图片</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 地点详情对话框 -->
+    <el-dialog v-model="showLocationDetails" :title="detailLocation?.name || '地点详情'" width="800px"
+      :close-on-click-modal="false">
+      <LocationDetailsCard v-if="detailLocation" :location="detailLocation" @edit="editLocationFromDetails"
+        @close="closeLocationDetails" />
+    </el-dialog>
+
     <!-- 地点表单对话框 -->
-    <el-dialog
-      v-model="showLocationForm"
-      :title="selectedLocation ? '编辑地点' : '添加地点'"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <LocationForm
-        :location="selectedLocation"
-        @submit="handleLocationSubmit"
-        @cancel="handleLocationCancel"
-        @delete="handleLocationDelete"
-      />
+    <el-dialog v-model="showLocationForm" :title="selectedLocation ? '编辑地点' : '添加地点'" width="600px"
+      :close-on-click-modal="false">
+      <LocationForm :location="selectedLocation" @submit="handleLocationSubmit" @cancel="handleLocationCancel"
+        @delete="handleLocationDelete" />
     </el-dialog>
   </div>
 </template>
@@ -184,10 +192,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Edit, Delete, Location, MapLocation, Calendar, Clock } from '@element-plus/icons-vue'
+import { Plus, Search, Edit, Delete, Location, MapLocation, Calendar, Clock, Picture } from '@element-plus/icons-vue'
 import { usePlanStore } from '@/stores/planStore'
 import { useLocationManagement } from '@/composables/useLocationManagement'
 import LocationForm from '@/components/Forms/LocationForm.vue'
+import LocationDetailsCard from '@/components/Common/LocationDetailsCard.vue'
 import type { Location as LocationType, LocationType as LocationTypeEnum } from '@/types'
 
 const planStore = usePlanStore()
@@ -211,6 +220,8 @@ const {
 // Local state
 const searchQuery = ref('')
 const filterType = ref('')
+const showLocationDetails = ref(false)
+const detailLocation = ref<LocationType | null>(null)
 
 // Computed
 const hasCurrentPlan = computed(() => planStore.hasCurrentPlan)
@@ -271,6 +282,26 @@ const confirmDeleteLocation = async (location: LocationType) => {
   } catch {
     // User cancelled
   }
+}
+
+const showLocationDetailsDialog = (location: LocationType) => {
+  detailLocation.value = location
+  showLocationDetails.value = true
+  selectLocation(location)
+}
+
+const closeLocationDetails = () => {
+  showLocationDetails.value = false
+  detailLocation.value = null
+}
+
+const editLocationFromDetails = (location: LocationType) => {
+  closeLocationDetails()
+  editLocation(location)
+}
+
+const previewImage = (images: string[], index: number) => {
+  // Element Plus image preview will handle this automatically
 }
 </script>
 
@@ -400,7 +431,7 @@ const confirmDeleteLocation = async (location: LocationType) => {
         font-size: 12px;
         color: var(--el-text-color-secondary);
 
-        > div {
+        >div {
           display: flex;
           align-items: center;
           gap: 4px;
@@ -421,6 +452,93 @@ const confirmDeleteLocation = async (location: LocationType) => {
 
         .location-tag {
           font-size: 11px;
+        }
+      }
+
+      .location-images {
+        margin-top: 8px;
+
+        .images-preview {
+          display: flex;
+          gap: 4px;
+          align-items: center;
+
+          .image-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--el-border-color-light);
+
+            :deep(.el-image) {
+              width: 100%;
+              height: 100%;
+            }
+
+            .image-error {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              font-size: 10px;
+              color: var(--el-text-color-secondary);
+              background: var(--el-bg-color-page);
+
+              .el-icon {
+                font-size: 16px;
+                margin-bottom: 2px;
+              }
+            }
+          }
+
+          .more-images {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            border: 1px dashed var(--el-border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--el-text-color-secondary);
+            background: var(--el-bg-color-page);
+
+            &:hover {
+              border-color: var(--el-color-primary);
+              color: var(--el-color-primary);
+            }
+          }
+        }
+      }
+
+      .location-placeholder {
+        margin-top: 8px;
+
+        .placeholder-image {
+          width: 100%;
+          height: 60px;
+          border: 1px dashed var(--el-border-color);
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+          background: var(--el-bg-color-page);
+          gap: 4px;
+
+          &:hover {
+            border-color: var(--el-color-primary);
+            color: var(--el-color-primary);
+          }
+
+          .el-icon {
+            font-size: 16px;
+          }
         }
       }
     }
